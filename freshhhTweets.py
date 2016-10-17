@@ -1,5 +1,6 @@
 import praw
 import tweepy
+import time
 
 #TODO
 #store the tweeted post id into temp_file 
@@ -10,8 +11,7 @@ temp_file = 'tweeted.txt'
 #reddit getting hot posts
 reddit = praw.Reddit('fresh music from /r/hiphopheads')
 hot_posts = reddit.get_subreddit('hiphopheads').get_hot(limit=30)
-fresh_tag = '[FRESH]'
-
+fresh_tag = 'FRESH'
 
 #tokens and auth needed for twitter API
 access_token = ''
@@ -41,14 +41,15 @@ def tweet_fresh_post(title, link, post_id):
 		print "adding id: " + post_id + " to file"
 		with open(temp_file,'a') as f:
 			f.write(post_id + '\n')
-		#tweet.update_status(title + '\nReddit Thread: ' + link)
+		time.sleep(25)
+		tweet.update_status(title + '\nReddit Thread: ' + link)
 		#tweet Here
 	else:
 		print 'Already Tweeted'
 
 def main():
 	for submission in hot_posts:
-		if submission.title[0:7].lower() == fresh_tag.lower():
+		if submission.title[1:6].lower() == fresh_tag.lower():
 			print "FRESH Music Found!"
 			tweet_fresh_post(str(submission.title), str(submission.permalink), str(submission.id))
 
