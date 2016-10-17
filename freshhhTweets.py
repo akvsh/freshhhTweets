@@ -7,46 +7,51 @@ import tweepy
 # make cron job to make it run every hour
 temp_file = 'tweeted.txt'
 
-#tokens and stuff needed for twitter API
+#reddit getting hot posts
+reddit = praw.Reddit('fresh music from /r/hiphopheads')
+hot_posts = reddit.get_subreddit('hiphopheads').get_hot(limit=30)
+fresh_tag = '[FRESH]'
+
+
+#tokens and auth needed for twitter API
 access_token = ''
 access_token_secret = ''
 consumer_key = ''
 consumer_secret = ''
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
+tweet = tweepy.API(auth)
 
 
-def check_duplicate_submission(id):
+def check_duplicate_submission(curr_id):
 	id_exists = False
-	file = open(temp_file,'r')
-	for posted_id in file:
-		if posted_id == id:
-			id_exists = True
-			break
+	with open(temp_file,'r') as f:
+		for posted_id in f:
+			print posted_id
+			if posted_id.strip() == curr_id:
+				id_exists = True
+				break;
+	print "Does id exist? {0}".format(id_exists)
 	return id_exists
 
-def tweet_fresh_post(title,link,post_id):
-	is_already_posted = check_duplicate_submission(post_id)
-	if(is_already_posted):
-		pass
-#	else:
-
+def tweet_fresh_post(title, link, post_id):
+	posted = check_duplicate_submission(post_id)
+	if(not posted):
+		print title + '\nReddit Thread: ' + link
+		print "adding id: " + post_id + " to file"
+		with open(temp_file,'a') as f:
+			f.write(post_id + '\n')
+		#tweet.update_status(title + '\nReddit Thread: ' + link)
 		#tweet Here
-		#add post_id to the file
-	#tweet with title and post link to post
+	else:
+		print 'Already Tweeted'
 
-#def get_hot_posts():
-reddit = praw.Reddit('fresh music from /r/hiphopheads')
-hot_posts = reddit.get_subreddit('hiphopheads').get_hot(limit=30)
-fresh_tag = '[FRESH]'
+def main():
+	for submission in hot_posts:
+		if submission.title[0:7].lower() == fresh_tag.lower():
+			print "FRESH Music Found!"
+			tweet_fresh_post(str(submission.title), str(submission.permalink), str(submission.id))
 
-for submission in hot_posts:
-	if submission.title[0:7].lower() == fresh_tag.lower():
-		tweet_fresh_post(submission.title, submission.permalink, submission.id) 
-		print "FRESH Music Found!"
-		print submission.id
-		print submission.title
-		print submission.permalink
-		#TODO check if post begins with [FRESH] (case doesn't matter) and call tweet function if it works
+if __name__ == "__main__":
+	main()
 
